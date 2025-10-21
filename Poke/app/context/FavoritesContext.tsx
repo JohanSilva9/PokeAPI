@@ -1,55 +1,38 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-interface Pokemon {
-  name: string;
-  url: string;
-}
+const FavoritesContext = createContext<any>(null);
 
-interface FavoritesContextType {
-  favorites: Pokemon[];
-  addFavorite: (pokemon: Pokemon) => void;
-  removeFavorite: (name: string) => void;
-  isFavorite: (name: string) => boolean;
-}
-
-const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
-
-export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
-  const [favorites, setFavorites] = useState<Pokemon[]>([]);
+export const FavoritesProvider = ({ children }: any) => {
+  const [favorites, setFavorites] = useState<any[]>([]);
 
   useEffect(() => {
-    (async () => {
-      const stored = await AsyncStorage.getItem('favorites');
-      if (stored) setFavorites(JSON.parse(stored));
-    })();
+    loadFavorites();
   }, []);
 
-  useEffect(() => {
-    AsyncStorage.setItem('favorites', JSON.stringify(favorites));
-  }, [favorites]);
-
-  const addFavorite = (pokemon: Pokemon) => {
-    if (!favorites.find((p) => p.name === pokemon.name)) {
-      setFavorites([...favorites, pokemon]);
-    }
+  const loadFavorites = async () => {
+    const saved = await AsyncStorage.getItem("favorites");
+    if (saved) setFavorites(JSON.parse(saved));
   };
 
-  const removeFavorite = (name: string) => {
-    setFavorites(favorites.filter((p) => p.name !== name));
+  const saveFavorites = async (data: any[]) => {
+    setFavorites(data);
+    await AsyncStorage.setItem("favorites", JSON.stringify(data));
   };
 
-  const isFavorite = (name: string) => favorites.some((p) => p.name === name);
+  const toggleFavorite = (pokemon: any) => {
+    const exists = favorites.find((f) => f.name === pokemon.name);
+    const updated = exists
+      ? favorites.filter((f) => f.name !== pokemon.name)
+      : [...favorites, pokemon];
+    saveFavorites(updated);
+  };
 
   return (
-    <FavoritesContext.Provider value={{ favorites, addFavorite, removeFavorite, isFavorite }}>
+    <FavoritesContext.Provider value={{ favorites, toggleFavorite }}>
       {children}
     </FavoritesContext.Provider>
   );
 };
 
-export const useFavorites = () => {
-  const context = useContext(FavoritesContext);
-  if (!context) throw new Error('useFavorites debe estar dentro de FavoritesProvider');
-  return context;
-};
+export const useFavorites = () => useContext(FavoritesContext);

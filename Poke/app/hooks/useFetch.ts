@@ -1,27 +1,31 @@
 import { useEffect, useState } from "react";
 
-export const useFetch = (url: string) => {
+export function useFetch(url: string, dependencies: any[] = []) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<any>(null);
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchData = async () => {
       try {
-        setLoading(true);
-        const res = await fetch(url);
-        const json = await res.json();
-        setData(json);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Error en la solicitud");
+        const result = await response.json();
+        if (mounted) setData(result);
       } catch (err) {
-        console.error(err);
-        setError(true);
+        setError(err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [url]);
+    return () => {
+      mounted = false;
+    };
+  }, dependencies);
 
   return { data, loading, error };
-};
+}

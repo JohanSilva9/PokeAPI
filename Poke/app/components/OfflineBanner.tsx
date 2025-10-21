@@ -1,33 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import NetInfo from '@react-native-community/netinfo';
+import React, { useEffect, useState } from "react";
+import { View, Text } from "react-native";
+import NetInfo from "@react-native-community/netinfo";
 
 export default function OfflineBanner() {
-  const [isConnected, setIsConnected] = useState(true);
+  const [offline, setOffline] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
-      setIsConnected(state.isConnected ?? true);
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      setOffline(!state.isConnected);
     });
     return () => unsubscribe();
   }, []);
 
-  if (isConnected) return null;
+  if (!offline) return null;
 
   return (
-    <View style={styles.banner}>
-      <Text style={styles.text}>Sin conexión a Internet. Solo se mostrarán los favoritos.</Text>
+    <View style={{ backgroundColor: "#e37e1e", padding: 10 }}>
+      <Text style={{ color: "white", textAlign: "center" }}>
+        Sin conexión a internet. Solo puedes ver tus favoritos.
+      </Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  banner: {
-    backgroundColor: '#e37e1e',
-    padding: 8,
-  },
-  text: {
-    color: 'white',
-    textAlign: 'center',
-  },
-});

@@ -14,11 +14,11 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="home"
+        name="pokemons"
         options={{
           title: "Pokémons",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="logo-octocat" color={color} size={size} />
+            <Ionicons name="list" color={color} size={size} />
           ),
         }}
       />

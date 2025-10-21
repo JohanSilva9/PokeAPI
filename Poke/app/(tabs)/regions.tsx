@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
+// app/(tabs)/regions.tsx
+import React, { useEffect, useState } from "react";
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
 import { getRegions } from "../service/api";
 import { useRouter } from "expo-router";
 
@@ -9,36 +10,48 @@ export default function RegionsScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    getRegions().then((data) => {
-      setRegions(data.results);
-      setLoading(false);
-    });
+    let mounted = true;
+    getRegions()
+      .then((res) => {
+        if (!mounted) return;
+        setRegions(res.results || []);
+      })
+      .catch((e) => {
+        console.error("Error regiones", e);
+      })
+      .finally(() => mounted && setLoading(false));
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  if (loading) return <ActivityIndicator style={{ marginTop: 50 }} size="large" color="#e37e1e" />;
+  if (loading) return <ActivityIndicator style={{ marginTop: 40 }} size="large" color="#e37e1e" />;
 
   return (
-    <View style={{ flex: 1, padding: 20 }}>
-      <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 10 }}>Regiones</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Regiones</Text>
       <FlatList
         data={regions}
-        keyExtractor={(item) => item.name}
+        keyExtractor={(r) => r.name}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={{
-              padding: 15,
-              marginVertical: 5,
-              backgroundColor: "#f0c82f",
-              borderRadius: 10,
+            style={styles.card}
+            onPress={() => {
+              // redirige a la pestaña pokemons pasando ?region=<slug>
+              router.push(`/(tabs)/pokemons?region=${item.name}`);
             }}
-            onPress={() => router.push(`/pokemons?region=${item.name}`)}
           >
-            <Text style={{ color: "#36393c", fontSize: 18, textTransform: "capitalize" }}>
-              {item.name}
-            </Text>
+            <Text style={styles.cardText}>{item.name}</Text>
           </TouchableOpacity>
         )}
       />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#36393c", padding: 12 },
+  title: { color: "#fff", fontSize: 22, fontWeight: "bold", marginBottom: 12 },
+  card: { backgroundColor: "#e37e1e", padding: 14, borderRadius: 10, marginBottom: 8 },
+  cardText: { color: "#fff", textTransform: "capitalize", fontSize: 16 },
+});
